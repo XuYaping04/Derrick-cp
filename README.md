@@ -1,6 +1,7 @@
 # Derrick-cp
 ---This repo is still under construction---
 Derrick-cp is used for convert between digital information and DNA sequences (encoding and decoding) in large-scale composite DNA-storage systems. The encoding process involves converting digital files into composite DNA sequences, including randomization, adding CRC-32 and Reed-Solomon(RS) codes which form CRC matrices and RS block, and then translating them into DNA sequences; The decoding process utilizes soft decision decoding strategies to correct errors and to convert the composite DNA sequences back to the original files as high precision as possible.
+
 **#Composite DNA**
 (1)the composite DNA encoding and decoding with hard decision in the paper: 
 Data storage in DNA with fewer synthesis cycles using composite DNA letters
