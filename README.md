@@ -14,8 +14,7 @@ The encoded files are available at https://github.com/xu-yaping/Derrick-cp/tree/
 (2)pt003.zip - Bi-lingual HTML version of the Bible from Mamre (https://www.mechon-mamre.org/p/pt/pt0101.htm)  
 
 ## Sequencing results  
-All NGS raw data in available at  
-https://www.ebi.ac.uk/ena/data/view/PRJEB32427  
+All NGS raw data in available at https://www.ebi.ac.uk/ena/data/view/PRJEB32427  
 
 ## General usage
 ### Encode:   
