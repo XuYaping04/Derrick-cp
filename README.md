@@ -12,8 +12,8 @@ https://doi.org/10.1038/s41587-019-0240-x
 **#Encoded data**
 
 The encoded files are available at https://github.com/xu-yaping/Derrick-cp/tree/main/Data
-(1)info_to_code.tar.gz - Message from Erlich and Zielinski (DOI: 10.1126/science.aaj2038)
 
+(1)info_to_code.tar.gz - Message from Erlich and Zielinski (DOI: 10.1126/science.aaj2038)
 (2)pt003.zip - Bi-lingual HTML version of the Bible from Mamre (https://www.mechon-mamre.org/p/pt/pt0101.htm)
 
 **#Sequencing results**
