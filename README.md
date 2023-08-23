@@ -18,15 +18,12 @@ The encoded files are available at https://github.com/xu-yaping/Derrick-cp/tree/
 
 **#Sequencing results**
 All NGS raw data in available at
-
 https://www.ebi.ac.uk/ena/data/view/PRJEB32427
 
 **General usage**
 #Encode: convert the digital file into composite DNA sequences, encoding with RS(45,41) and CRC-32
-
 Python3 Encode.py [-h] -k RESOLUTION -i DIGITAL_PATH -s SAVED_PATH
 
 
 #Decode: convert composite DNA sequences into the digital file, decoding with RS(45,41) in soft decision strategy.
-
 python3 Decode.py [-h] -k RESOLUTION -i INFERRED_PATH -s SAVED_PATH
