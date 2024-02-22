@@ -288,10 +288,12 @@ def read_args():
     :return: parameters.
     """
     parser = ArgumentParser()
+    #required
     parser.add_argument("-k", "--resolution", required=True, type=int,
                         help="the resolution value in 6(64), 6(84), 8(128), 10(256) et al.")
     parser.add_argument("-c", "--alphabet_size", required=True, type=int,
                         help="the size of alphabet count in k(=6,8,10 et al.)")
+    
     parser.add_argument("-i", "--digital_path", required=True, type=str,
                         help="the inferred sequences path")
     parser.add_argument("-o", "--encoded_path", required=True, type=str,
@@ -306,9 +308,9 @@ def read_args():
                         help="RS(rsK, rsN)")
     return parser.parse_args()
 
-#------------------------------------------------------------------------------
+
 if __name__ == "__main__":
-    '''#The global variance#'''
+    '''#ToDO: Global variance#'''
     params = read_args()
     print("The parameters are:")
     print("Resolution(k) = {}".format(params.resolution)) #-k
@@ -325,10 +327,3 @@ if __name__ == "__main__":
     time_end = time.time()
     time_encode = time_end - time_start
     print('End, {} blocks {} sec.'.format(CRC_matrix_no_cnt, round(time_encode, 3)))
-        
-'''
-/public/agis/ruanjue_group/xuyaping/3-DNACoding/3-Test/1-SourceToOligo/0-En.Shell/0-Encode.NoCRC.FullSet.py 
-python3 -k resolution -c alphabet_size -rsK rsK -rsN rsN -i digital_path -o encoded_path
-file_in = '/public/agis/ruanjue_group/xuyaping/3-DNACoding/3-Test/1-SourceToOligo/3-CharToBp//2-Bit.out'
-file_col = '/public/agis/ruanjue_group/xuyaping/3-DNACoding/3-Test/1-SourceToOligo/4-BinToCpDNA/6-K6/2-RS45.41.8Bits.Full/3-Bit.col.sim.out'
-'''
