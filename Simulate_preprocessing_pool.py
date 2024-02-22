@@ -16,8 +16,8 @@ from Map_Candidate_set import Candidate_set
 class Simulate_wet_pipeline():
     def __init__(self, k: int, alp_size: int, deep: int, err_rate: float, sample_val: float, rsK: int = 41, rsN: int = 45):
         '''# TODO 0-0: Initialize the coder of Matirx consisting of ten consecutive blocks and CRC32.'''
-        self.k, self.alp_size, self.matrix_size, self.read_size , self.crc= int(k), int(alp_size), 10, 150, 32
-        self.fmol, self.deep = 3*pow(10, 11), int(deep)
+        self.k, self.alp_size, self.matrix_size, self.read_size , self.crc= k, alp_size, 10, 150, 32
+        self.fmol, self.deep = 3*pow(10, 11), deep
         self.Oligo_Order = ['A', 'C', 'G', 'T']
 
         '''# TODO 0-1:  Two conversions --- Bits and GFint, Bits and letters'''
@@ -84,7 +84,7 @@ class Simulate_wet_pipeline():
                     for l in range(self.read_size):
                         block_cpdna = [syn_result_matrix[ll][l] for ll in range(self.Block_dna_size)]
                         col_no += 1
-                        f_nr_col.write('>conitg{}'.format(col_no) + '\n')
+                        f_nr_col.write('>conitg{}\n'.format(col_no))
                         f_nr_col.write('CpDNA:\t{}\n'.format(','.join([ll[1] for ll in block_cpdna])))
                         f_nr_col.write('Dprat:\t{}\n'.format(','.join([ll[0] for ll in block_cpdna])))
                         f_nr_col.write('Depth:\t{}\n'.format(','.join(syn_result_matrix_dp)))
@@ -331,8 +331,9 @@ def read_args():
                         help="the resolution value in 6(64), 6(84), 8(128), 10(256) et al")
     parser.add_argument("-c", "--alphabet_size", required=True, type=int,
                         help="the size of alphabet count in k(=6,8,10 et al.)")
-    parser.add_argument("-d", "--deep", required=True, type=str,
+    parser.add_argument("-d", "--deep", required=True, type=int,
                         help="the inferred sequences path")
+    
     parser.add_argument("-i", "--encoded_path", required=True, type=str,
                         help="the encoding seqeuences path with Derrick-cp.")
     parser.add_argument("-o", "--saved_path", required=True, type=str,
@@ -341,9 +342,9 @@ def read_args():
                         help="the simulated seqeuences wirh pretreatment path")
 
     #required = False
-    parser.add_argument("-e", "--error_rate", required=False, type=str,
+    parser.add_argument("-e", "--error_rate", required=False, type=float,
                         help="The total error rate of oligo in process of DNA stroage.")
-    parser.add_argument("-s", "--sample_val", required=False, type=str,
+    parser.add_argument("-s", "--sample_val", required=False, type=float,
                         help="The value of sampling quality.")
 
     return parser.parse_args()
