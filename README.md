@@ -19,10 +19,8 @@ All NGS raw data in available at https://www.ebi.ac.uk/ena/data/view/PRJEB32427
 ## General usage
 ### Encode:   
 convert the digital file into composite DNA sequences, encoding with RS(45,41) and CRC-32  
-`Python3 Encoder_Digital2Letter.py [-h] -k RESOLUTION -c ALPHABET_SIZE -i DIGITAL_PATH -o ENCODED_PATH -p ENCODED_COL_PATH
-                    [-rsK RSK] [-rsN RSN]`  
+`Python3 Encoder_Digital2Letter.py [-h] -k RESOLUTION -c ALPHABET_SIZE -i DIGITAL_PATH -o ENCODED_PATH -p ENCODED_COL_PATH [-rsK RSK] [-rsN RSN]`  
 
 ### Decode:   
 convert composite DNA sequences into the digital file, decoding with RS(45,41) in soft decision strategy.  
-`python3 Decoder_Letter2Digital.py [-h] -k RESOLUTION -c ALPHABET_SIZE -i INFERRED_PATH -o SAVED_DIGITAL_PATH -p
-                           SAVED_LETTER_PATH [-rsK RSK] [-rsN RSN]`   
+`python3 Decoder_Letter2Digital.py [-h] -k RESOLUTION -c ALPHABET_SIZE -i INFERRED_PATH -o SAVED_DIGITAL_PATH -p SAVED_LETTER_PATH [-rsK RSK] [-rsN RSN]`   
