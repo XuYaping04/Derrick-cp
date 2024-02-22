@@ -535,7 +535,8 @@ class Seq2Digital_Decode():
 
 
     def Soft_CerLocation(self, loc_sr_block, loc_combin):
-        '''#TODO: recify the error in several positions sorted and selected by Euclidean distance'''
+        '''#TODO: recify the error in several positions sorted and selected by Euclidean distance;
+           Extract transition probabilities from transition library(Soft_Rule.py) by potential wrong letters.'''
         loc_sr_refer = [  Soft_Rule(self.k, self.Block_Depth[l], loc_sr_block[l] )  for l in loc_combin ] 
         loc_sr_combin = Seq2Digital_Decode.Comb_SoftRule(loc_sr_refer)
         '''
@@ -838,7 +839,7 @@ class Seq2Digital_Decode():
                 dp_list = list(map(int, line.split(',')))
                 dp_list_form = [ round(l, 6) for l in dp_list]
             elif re.search(r'^Dist1', line):
-                '''#TODO: Euclidean distance'''
+                '''#TODO: Euclidean distance which were simulated in Simulate_preprocessing_pool.py'''
                 nr_block_dist = line.strip().split('Dist1:')[-1].strip().split(',')
                 nr_block_dist = list(map(float, nr_block_dist))
                 NrCol_Infr.append([ (int(block_id)-1)%self.matrix_size, nr_block_cpdna, nr_block_dist])
