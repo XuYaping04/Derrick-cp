@@ -51,8 +51,8 @@ class Seq2Digital_Decode():
         #Encode
             mes_ecc = rs.rs_encode_msg(mes_en, self.rsD, gen=self.generator[self.rsD])
         #Decode
-            rmes, recc, errata_pos = rs.rs_correct_msg(mes_err, nsym) #纠错后的序列rmes， 及其相应的纠错码recc， 以及其纠正的位置errata_pos
-            rmes, recc, errata_pos = rs.rs_correct_msg(mes_err, nsym, erase_pos=[3, 6]) #纠错后的序列rmes， 及其相应的纠错码recc， 以及其纠正的位置errata_pos
+            rmes, recc, errata_pos = rs.rs_correct_msg(mes_err, nsym)
+            rmes, recc, errata_pos = rs.rs_correct_msg(mes_err, nsym, erase_pos=[3, 6])
         #Py2: 
             self.coder = rs.RSCoder(GFint=self.GFint, k=self.rsK, n=self.rsN)            
         '''
@@ -535,8 +535,9 @@ class Seq2Digital_Decode():
 
 
     def Soft_CerLocation(self, loc_sr_block, loc_combin):
-        '''#TODO: recify the error in several positions sorted and selected by Euclidean distance;
-           Extract transition probabilities from transition library(Soft_Rule.py) by potential wrong letters.'''
+        '''#TODO: predicting the error positions by candidate positions sets and the corresponding correction letters by the alternative letter sets
+           candidate positions set are selected by Euclidean distance;
+           alternative letter sets are extracted by transition probabilities from transition library(Soft_Rule.py) '''
         loc_sr_refer = [  Soft_Rule(self.k, self.Block_Depth[l], loc_sr_block[l] )  for l in loc_combin ] 
         loc_sr_combin = Seq2Digital_Decode.Comb_SoftRule(loc_sr_refer)
         '''
@@ -733,19 +734,13 @@ class Seq2Digital_Decode():
 
     @staticmethod
     def Basic_infr_SR(k):
-        '''#TODO: basic information of soft decision'''
+        '''#TODO: basic information of soft decision
+           and need further adjustment according to RS code. such as {1: rsK, 2: rsK/3, ...}'''
         Max_Sr_Symbol = { 6: 5, 8: 6, 10: 5 }
-        Max_Location = {
-            6: {1: 45, 2: 15, 3: 15, 4: 15, 5: 10}, 
-            8: {1: 45, 2: 15, 3: 20, 4: 15, 5: 15, 6: 10}, 
-            10: {1: 45, 2: 15, 3: 15, 4: 15, 5: 10, 6: 10} 
-        }
-        Max_Comloc = {
-            6: {1: 45, 2: 105, 3: 455, 4: 300, 5: 200},
-            8: {1: 45, 2: 105, 3: 1140, 4: 1360, 5: 3005, 6: 200}, 
-            10: {1: 45, 2: 150, 3: 200, 4: 1360, 5: 210}
-        }
-        return Max_Sr_Symbol[k], Max_Location[k], Max_Comloc[k]    
+        Max_Location =  {1: 45, 2: 15, 3: 15, 4: 15, 5: 10, 6:10}
+        Max_Comloc = {1: 45, 2: 200, 3: 1000, 4: 1500, 5: 1000, 6: 500}
+
+        return Max_Sr_Symbol[k], Max_Location, Max_Comloc
 
     @staticmethod
     def Combinations_Cnt(candi_L, conbin_count):
@@ -831,25 +826,32 @@ class Seq2Digital_Decode():
         for line in f_nr:
             if re.search(r'^>', line):
                 block_id = int(re.findall(r'\d+', line)[0])
-            elif re.search(r'^CpDNA', line):
-                line = line.strip().split('CpDNA:')[-1].strip()
-                nr_block_cpdna = line.split(',')
-            elif re.search(r'^Depth', line):
-                line = line.strip().split('Depth:')[-1].strip()
-                dp_list = list(map(int, line.split(',')))
-                dp_list_form = [ round(l, 6) for l in dp_list]
-            elif re.search(r'^Dist1', line):
-                '''#TODO: Euclidean distance which were simulated in Simulate_preprocessing_pool.py'''
-                nr_block_dist = line.strip().split('Dist1:')[-1].strip().split(',')
-                nr_block_dist = list(map(float, nr_block_dist))
-                NrCol_Infr.append([ (int(block_id)-1)%self.matrix_size, nr_block_cpdna, nr_block_dist])
+            elif re.search(r'^Observed', line):
+                line = line.strip().split('Observed:')[-1].strip()
+                Observed_block = line.split(',')
+                
+            elif re.search(r'^Inferred', line):
+                line = line.strip().split('Inferred:')[-1].strip()
+                Inferred_block = line.split(',')
+
+                '''#TODO:  Calculate the Euclidean distance used for later predicting error positions'''
+                nr_block_dist, dp_list = [], []
+                for l in range(len(nr_block_cpdna)):
+                    Observed_ratio = list(map(int, re.findall('\d+', Observed_block[l])))
+                    Inferred_ratio = list(map(int, re.findall('\d+', Inferred_block[l])))
+                    depth = sum(Observed_ratio)
+                    dp_list.append(depth)
+                    Euclidean_d = [ pow(Inferred_ratio[ll]-Observed_ratio[ll]*self.k/depth, 2) for ll in range(4)]
+                    nr_block_dist.append( round( sum(Euclidean_d), 6) )
+                
+                NrCol_Infr.append([ (int(block_id)-1)%self.matrix_size, Inferred_block, nr_block_dist])
                 
                 if block_id % 10 == 0:
                     '''To decode one CRC_Matrix in soft decision and record the decoding progress'''
                     print('#begin, {} block decoding...'.format( block_id // self.matrix_size))
                     time_start = time.time()
                     try:
-                        Mat_TF, Mat_Deal_way, Mat_Decoded_letter, Mat_Decoded_bits = Seq2Digital_Decode.Coder_Matrix(self, NrCol_Infr, dp_list_form, need_log=False)
+                        Mat_TF, Mat_Deal_way, Mat_Decoded_letter, Mat_Decoded_bits = Seq2Digital_Decode.Coder_Matrix(self, NrCol_Infr, dp_list, need_log=False)
                     except:
                         Mat_TF, Mat_Deal_way, Mat_Decoded_letter, Mat_Decoded_bits = False, 'Failure', []*self.matrix_size, '0'*self.Matrix_bit_size
                     
@@ -912,11 +914,12 @@ def read_args():
     parser.add_argument("-p", "--saved_letter_path", required=True, type=str,
                        help="the decoding seqeuences path with Derrick-cp.")
     
-
+    
     parser.add_argument("-rsK", "--rsK", required=False, type=int,
                         help="RS(rsK, rsN)")
     parser.add_argument("-rsN", "--rsN", required=False, type=int,
                         help="RS(rsK, rsN)")
+    #if the rsN changes, the others parameters in soft-decision decoding need to be adjusted in further.
     return parser.parse_args()
 
 
