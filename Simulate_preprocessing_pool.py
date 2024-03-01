@@ -5,6 +5,7 @@ Created on Wed Apr  6 14:23:33 2022
 @author: Xu Yaping
 """
 
+
 import numpy as np
 import re, math, random, time
 from scipy import stats
@@ -33,10 +34,11 @@ class Simulate_wet_pipeline():
         self.error_seed = random.sample(range( 1, int(1/self.error_rate) + 1), 1)[0]
         self.sample_val = float(sample_val)
 
-    def Syn_Norm(self, file_en: str, file_wet: str, file_wet_col: str, need_logs: bool = True):
-        print("Encoded sequences path = ", file_en)   #-i
-        print("Simulated sequences path = ", file_wet)   #-o
-        print("Simulated sequences wirh pretreatment path = ", file_wet_col)   #-p
+
+    def Syn_Inferred(self, file_en: str, file_wet: str, file_wet_col: str, need_logs: bool = True):
+        print("Encoded sequences path = ", file_en) #-i
+        print("Simulated sequences path = ", file_wet) #-o
+        print("Simulated sequences wirh pretreatment path = ", file_wet_col) #-p
 
         '''#TODO 1-0: Deep follows the normal distribution#'''
         contig_dp = Simulate_wet_pipeline.NormDepth(self, file_en)
@@ -70,25 +72,22 @@ class Simulate_wet_pipeline():
             '''#TODO 1-2: Simulate each matrix_crc32 in multithread#'''
             for sub_matrix in matirx_results:
                 if sub_matrix != []:
-                    syn_result_matrix, syn_result_matrix_dp = [], []
+                    syn_result_matrix = []
                     for syn_result in sub_matrix:
-                        #[ [ Max_fre_sample: str, cpdna: str, distance: float ], ..., ...]
+                        #[ [ Max_fre_sample: str, cpdna: str ], ..., ...]
                         syn_result_matrix.append(syn_result[-1])
-                        syn_result_matrix_dp.append(str(syn_result[1]))
                         
-                        f_nr.write('>contig{}\t{}\t{}\n'.format(syn_result[0], syn_result[1], syn_result[2]))
+                        f_nr.write('>contig{}\n'.format(syn_result[0])) #syn_result[1], syn_result[2]
                         Row_read_str = [ l[1] for l in syn_result[-1]]
                         f_nr.write('{}\n'.format(','.join(Row_read_str)))
                     
                     '''#TODO 1-3: Output the infered letter read#'''
                     for l in range(self.read_size):
-                        block_cpdna = [syn_result_matrix[ll][l] for ll in range(self.Block_dna_size)]
+                        block_cpdna = [ syn_result_matrix[ll][l] for ll in range(self.Block_dna_size)]
                         col_no += 1
                         f_nr_col.write('>conitg{}\n'.format(col_no))
-                        f_nr_col.write('CpDNA:\t{}\n'.format(','.join([ll[1] for ll in block_cpdna])))
-                        f_nr_col.write('Dprat:\t{}\n'.format(','.join([ll[0] for ll in block_cpdna])))
-                        f_nr_col.write('Depth:\t{}\n'.format(','.join(syn_result_matrix_dp)))
-                        f_nr_col.write('EDist:\t{}\n'.format(','.join([str(ll[-1]) for ll in block_cpdna])) )
+                        f_nr_col.write('Observed:\t{}\n'.format(','.join([ll[0] for ll in block_cpdna])))
+                        f_nr_col.write('Inferred:\t{}\n'.format(','.join([ll[1] for ll in block_cpdna])))
         f_en.close()
         f_nr.close()
         f_nr_col.close()
@@ -151,6 +150,8 @@ class Simulate_wet_pipeline():
         :return: parameters: list = [read_id: int, read_depth: int, real_depth: int, normcpdna: list].
         :return: normcpdna: [ Max_fre_sample: str, cpdna: str, distance: float ]
         """
+                
+        '''##'''
         sequence_read = []
         for syn_cpdna in read_infr[-1]: 
             sequence_read.append(Simulate_wet_pipeline.Simulate_CpDNA(self, syn_cpdna, read_infr[1]))
@@ -164,7 +165,7 @@ class Simulate_wet_pipeline():
         for l in range(self.read_size):
             Oligo_count = {ll: 0 for ll in self.Oligo_Order }
             for ll in range(real_dp): Oligo_count[sequence_read_filt[ll][l]] += 1
-            Clo_NormCpDNA = Simulate_wet_pipeline.Sample2Infer_MAP(self, [Oligo_count[ll] for ll in self.Oligo_Order]) #[ Max_fre_sample: str, cpdna: str, distance: float ]
+            Clo_NormCpDNA = Simulate_wet_pipeline.Sample2Infer_MAP(self, [Oligo_count[ll] for ll in self.Oligo_Order]) #[ Max_fre_sample: str, cpdna: str ] #distance: float
             norm2CpDNA.append(Clo_NormCpDNA)
         return [read_infr[0], read_infr[1], real_dp, norm2CpDNA]
 
@@ -176,8 +177,22 @@ class Simulate_wet_pipeline():
         :param dp_refer: int, sequencing depth
         :return: simulate oligo in wet pipeline.
         """
+        
         cpdna_val = list(map(int, re.findall(r'\d+', cpdna_refer)))
         ratio =  { i : r/self.k for i,r in zip(self.Oligo_Order, cpdna_val) }
+
+        '''#Multi bias in letter proportion'''
+        if True:
+            syn_total = 30000
+            syn_count_sta = { l: 0 for l in self.Oligo_Order}
+            base_ratio = np.array(list(ratio.values()))
+            for l in range(syn_total):
+                simul_oligo = np.random.choice( self.Oligo_Order, p=base_ratio.ravel() )
+                syn_count_sta[simul_oligo] += 1
+        
+        #update
+        ratio = { l : syn_count_sta[l]/syn_total for l in self.Oligo_Order }
+        
         fmol_val = { r: int(ratio[r]*self.fmol) for r in ratio }
         sumfmol = sum(list(fmol_val.values()))
         if sumfmol != self.fmol:
@@ -216,7 +231,7 @@ class Simulate_wet_pipeline():
         """
         #TODO: Select several letters with higher probability, form a set, and select the most likely letter
         :param sample_observed: list contianing the count of oligo in self.Oligo_order, like [8, 19, 32, 41]
-        :return: Max_fre_sample = [ Max_fre_sample: str, cpdna: str, distance: float ]
+        :return: Max_fre_sample = [ Max_fre_sample: str, cpdna: str ] # distance: float
         """
         br_nr_cpdna = Simulate_wet_pipeline.Brute_Norm(self, sample_observed)
         if ':'.join(list(map(str, br_nr_cpdna))) in self.Cpdna_list:
@@ -233,11 +248,12 @@ class Simulate_wet_pipeline():
         candi_fre_val.sort(key=lambda l:l[-1], reverse=True)
         candi_fre_val = candi_fre_val[0]
         
-        '''TODO: Simulate the Euclidean distance'''
+        '''TODO: Simulate the Euclidean distance
         real_dp = sum(candi_fre_val[0])
         sample_norm = [ candi_fre_val[0][l]*self.k/real_dp  for l in range(4) ]
-        distance = [ pow(candi_fre_val[1][ll]-sample_norm[ll], 2) for ll in range(4)]
-        Max_fre_sample = [ ':'.join(list(map(str, candi_fre_val[0]))), ':'.join(list(map(str, candi_fre_val[1]))), sum(distance)]
+        distance = [ pow(candi_fre_val[1][ll]-sample_norm[ll], 2) for ll in range(4)]]'''
+    
+        Max_fre_sample = [ ':'.join(list(map(str, candi_fre_val[0]))), ':'.join(list(map(str, candi_fre_val[1]))) ]
         
         return Max_fre_sample
 
@@ -363,8 +379,7 @@ if __name__ == '__main__':
     print()
     time_start = time.time()
     Simulate_wet = Simulate_wet_pipeline(params.resolution, params.alphabet_size, params.deep, params.error_rate, params.sample_val, rsK=41, rsN=45)
-    Simulate_wet.Syn_Norm(params.encoded_path, params.saved_path, params.saved_pretreat_path)
+    Simulate_wet.Syn_Inferred(params.encoded_path, params.saved_path, params.saved_pretreat_path)
     time_end = time.time()
     time_interval = time_end - time_start
     print('End, simulating... with {} sec.'.format(round(time_interval, 4)))
-
