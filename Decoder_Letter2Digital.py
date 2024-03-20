@@ -127,7 +127,7 @@ class Seq2Digital_Decode():
         '''
         block_nr_GF = Seq2Digital_Decode.Letter2GFint(self, rs_block)
 
-        '''#TODO -0: Decode each rs block with hard decision;'''
+        '''#TODO -0: Decode each rs block with RS code which enables efficient block-level verification and error correction'''
         try:
             rmes, recc, errata_pos = rs.rs_correct_msg(block_nr_GF, self.rsD)
         except:
@@ -138,7 +138,7 @@ class Seq2Digital_Decode():
             de_block_rel = Seq2Digital_Decode.GFint2Letter(self, block_de_GF)
 
             if len(errata_pos) == self.rsT:
-                '''#TODO -1: Certain the RS block whether or not in collision#'''
+                '''#TODO -1: Certain the decoding result whether or not in collision#'''
                 diff_nr_de_letter = [ [rs_block[l], de_block_rel[l]] for l in range(self.rsN) if de_block_rel[l] != rs_block[l]]
 
                 SR_Oligo_IN = True
@@ -513,19 +513,18 @@ class Seq2Digital_Decode():
 
 
     def Soft_RecOne(self, rec_cnt, rec_start_loc, rec_loc, rec_block ):
-        '''#TODO: remedy one error. separete the all candidate into little interval as "range_loc" ,then decode with reed-solomon if crc_block true then return#'''
+        '''#TODO: remedy one error.'''
         rec_comindex_set = Seq2Digital_Decode.Combin_Order(self, rec_cnt, rec_loc)
         pool_rel = []
         for sub_loc in range(rec_start_loc, len(rec_comindex_set)):
             sub_sr = Seq2Digital_Decode.Soft_CerLocation(self, rec_block, rec_comindex_set[sub_loc])
             pool_rel.extend(sub_sr)
-
         return 'End', pool_rel
 
 
     def Soft_RecCerCnt(self, rec_cnt, rec_start_loc, rec_loc, rec_block ):
         rec_comindex_set = Seq2Digital_Decode.Combin_Order(self, rec_cnt, rec_loc)
-        '''#TODO: separete the all candidate into little interval as "range_loc" ,then decode with reed-solomon if crc_block true then return#'''
+        '''#TODO: corrects the specified number of errors, then decode with reed-solomon if crc_block true then return#'''
         for sub_loc in range(rec_start_loc, len(rec_comindex_set)):
             sub_sr = Seq2Digital_Decode.Soft_CerLocation(self, rec_block, rec_comindex_set[sub_loc])
             if sub_sr != []:
@@ -536,7 +535,7 @@ class Seq2Digital_Decode():
 
     def Soft_CerLocation(self, loc_sr_block, loc_combin):
         '''#TODO: predicting the error positions by candidate positions sets and the corresponding correction letters by the alternative letter sets
-           candidate positions set are selected by Euclidean distance;
+           candidate position set are selected by Euclidean distance;
            alternative letter sets are extracted by transition probabilities from transition library(Soft_Rule.py) '''
         loc_sr_refer = [  Soft_Rule(self.k, self.Block_Depth[l], loc_sr_block[l] )  for l in loc_combin ] 
         loc_sr_combin = Seq2Digital_Decode.Comb_SoftRule(loc_sr_refer)
@@ -544,13 +543,14 @@ class Seq2Digital_Decode():
         #if loc_sr_combin == []:    return []
         '''
         dpindex_rel = []
+        '''#Attempt to correct the wrong letter by credibly position and letter'''
         for sub_loc_combin in loc_sr_combin:
             loc_sr_block_1 = deepcopy(loc_sr_block)
             for rec_index in range(len(sub_loc_combin)):            
-                '''#To change the tosoft_cpdna_1, under index: loc_combin and rec_cpdan: sub_loc_combin'''
+                '''#Update'''
                 loc_sr_block_1[ loc_combin[rec_index] ] = sub_loc_combin[rec_index]
             
-            '''#To decode the tosoft_cpdna_1 with Reed-Solomon#'''
+            '''#Decode the updated block with Reed-Solomon code#'''
             dpindex_soft_rel = Seq2Digital_Decode.Coder_Block_Hard(self, loc_sr_block_1)
             if dpindex_soft_rel[0] not in  ['UnDe', 'DeEq2Coll']:
                 '''#TODO: Make sure the correction item works#'''
@@ -566,10 +566,10 @@ class Seq2Digital_Decode():
     
 
     def Combin_Order(self, com_cnt, com_loc):
-        '''#TODO: Combination'''
+        '''#TODO: Selects out the candidate error position set using Euclidean distance and sort in reversed order'''
         limit_loc = self.Max_Location[com_cnt]
         limit_com = self.Max_Comloc[com_cnt]
-        '''Reversed order'''
+
         loc_order = sorted(range(len(com_loc)), key=lambda l : com_loc[l], reverse=True)
         loc_order_part = loc_order[: limit_loc]
         
@@ -589,7 +589,7 @@ class Seq2Digital_Decode():
 
 
     def Cer_CRC_Block(self, Cer_sr_pdl_Com, Cer_ID, cer_Matrix):
-        '''#TODO: Verify with crc_32 in multi-block.'''
+        '''#TODO: Verify with crc_32 in Matrix containing ten consecutive blocks'''
         cer_sr_pool_Infr = [[ Cer_ID[l], Cer_sr_pdl_Com[l]] for l in range(len(Cer_sr_pdl_Com))]
 
         cer_crc_Matrix = deepcopy(cer_Matrix)
@@ -828,8 +828,7 @@ class Seq2Digital_Decode():
                 block_id = int(re.findall(r'\d+', line)[0])
             elif re.search(r'^Observed', line):
                 line = line.strip().split('Observed:')[-1].strip()
-                Observed_block = line.split(',')
-                
+                Observed_block = line.split(',')  
             elif re.search(r'^Inferred', line):
                 line = line.strip().split('Inferred:')[-1].strip()
                 Inferred_block = line.split(',')
