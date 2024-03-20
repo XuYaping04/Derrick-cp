@@ -309,7 +309,7 @@ def Generate_Softrule():
     trans_from, letter_order = TransRatio_Letter(k_list)
     
     '''#TODO: 
-        Generate the SoftRule. selecting the possible letters with the highest transition probabilities in the depth;
+        Note: Generate the  transition library(SoftRule.py) by selecting from potential letters with the highest transition probabilities in the depth, to predict and correct letter errors.
         In the final application of Derrick-cp algorithm, the rules for multiple depths need to be summarized.
     '''
     #ratio_min
@@ -338,8 +338,6 @@ def read_arss():
                         help="the ratio floor")
     parser.add_argument("-r", "--output_root", required=True, type=str,
                         help="the saved path")
-    
-
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -353,12 +351,12 @@ if __name__ == "__main__":
     print("Ratio_limit = {}".format(params.ratio_floor))
     print("Output_path = {}\n\n".format(params.output_root))
     
+    '''#TODO: global variance'''
     k = params.resolution
     deep = params.deep
     root = params.output_root
     ratio_min = params.ratio_floor
 
-    '''#TODO: global variance'''
     k_list,k_dict = Sumk()
     dp_set,dp_dict = Sumdeep()
 
