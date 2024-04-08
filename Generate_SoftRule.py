@@ -71,7 +71,7 @@ def Factorial(sub_sample,sub_fmol):
     return sum_former - sum_latter
 
 def Sample_Frequency(ratio_k, ratio_fmol, eft, uneft):
-    '''#TODO: ratio_fmol -- sample_dp'''
+    '''#TODO: (c) ratio_fmol -- sample_dp'''
     if uneft == []: #Flag
         comsum = [Factorial(eft[s],ratio_fmol[s]) for s in range(4)]
         comsum.append(deep*math.log10(0.99))
@@ -130,7 +130,7 @@ def Sample_Frequency(ratio_k, ratio_fmol, eft, uneft):
 
 
 def Letter_Frequency(ratiok):
-    '''#TODO: record the simulate results of single letter'''
+    '''#TODO: record the results of single letter'''
     rootFre = '{}/1-FreqAll/{}.txt'.format(root, '.'.join(map(str,ratiok)))
     fw = open(rootFre,'w')
 
@@ -161,7 +161,7 @@ def Infer2Letter(ratiok):
     '''#TODO: Inference from sample into letter'''
     rootFre = '{}/1-FreqAll/'.format(root)
     
-    sample2CpDNA = cp.deepcopy(dp_dict)
+    sample2letter = cp.deepcopy(dp_dict)
     for s in range(len(ratiok)):
         normratiok = ':'.join(map(str,ratiok[s]))
         inputpath = '{}/{}.txt'.format(rootFre, '.'.join(map(str,ratiok[s])))
@@ -172,10 +172,10 @@ def Infer2Letter(ratiok):
                 line[1] = float(line[1])
                 sample = line[0]
                 #TODO: Update
-                if line[1] > sample2CpDNA[sample][1]:
-                    sample2CpDNA[sample] = [ [normratiok] , line[1] ]
-                elif line[1] == sample2CpDNA[sample][1]: 
-                    sample2CpDNA[sample][0].append(normratiok)
+                if line[1] > sample2letter[sample][1]:
+                    sample2letter[sample] = [ [normratiok] , line[1] ]
+                elif line[1] == sample2letter[sample][1]: 
+                    sample2letter[sample][0].append(normratiok)
                 else:
                     continue
             else:
@@ -184,13 +184,13 @@ def Infer2Letter(ratiok):
 
     '''#TODO: Cluster the sample by the infered letter'''
     letter_sample = cp.deepcopy(k_dict)   
-    for key in sample2CpDNA: 
-        for s in range(len(sample2CpDNA[key][0])):
-            letter_sample[sample2CpDNA[key][0][s]].append([key,sample2CpDNA[key][1]])
-    return sample2CpDNA, letter_sample
+    for key in sample2letter: 
+        for s in range(len(sample2letter[key][0])):
+            letter_sample[sample2letter[key][0][s]].append([key,sample2letter[key][1]])
+    return sample2letter, letter_sample
 
 
-def ClusterWithLetter(sample2CpDNA, sub_ratio):
+def Cluster_Letter(sample2letter, sub_ratio):
     '''#TODO: Cluster the sample by letter'''
     Frepath = '{}/1-FreqAll/{}.txt'.format( root, '.'.join(map(str,sub_ratio)))
     Normpath = '{}/2-Norm/{}.txt'.format(root, '.'.join(map(str,sub_ratio)))
@@ -203,11 +203,10 @@ def ClusterWithLetter(sample2CpDNA, sub_ratio):
         if re.search(r'^\d',line):
             line = line.strip().split()
             sample = line[0]  #[line[0], line[1]] = [Sample,Fre]
+            '''# sample2letter = { Sample : [[CpDNA1,CpDNA2,...],Fre], ... , ... }
+               # letter_sample = { CpDNA1 : [[Sample1,Fre],[Sample2,Fre],[Sample3,Fre],...] , CpDNA2 : [[...,...],[...,...]] ] ]
             '''
-             # sample2CpDNA = { Sample : [[CpDNA1,CpDNA2,...],Fre], ... , ... }
-             # letter_sample = { CpDNA1 : [[Sample1,Fre],[Sample2,Fre],[Sample3,Fre],...] , CpDNA2 : [[...,...],[...,...]] ] ]
-             '''
-            for s in sample2CpDNA[sample][0]:
+            for s in sample2letter[sample][0]:
                 CpDNA2Cluster[s].append( [line[0], line[1]] )
     fi.close()
     
@@ -248,10 +247,7 @@ def TransRatio_Letter(k_list):
         all_fre.sort()
         undervalue = all_fre[-1] - 300
         
-        sum1 = 0 
-        for i in range(len(all_fre)):
-            sum1 += pow(10,all_fre[i]-undervalue)
-
+        sum1 = sum( [ pow(10,all_fre[i]-undervalue) for i in range(len(all_fre)) ] )
         for sub_key in norm_fre_rel:
             sum2 = 0 
             if norm_fre_rel[sub_key] != []:
@@ -304,17 +300,17 @@ def Generate_Softrule():
     Mkdir( root + '/1-FreqAll/')
     Mkdir( root + '/2-Norm/')
 
-    '''#TODO: Simulate the Frequency with multiprocess'''
+    '''#TODO (b): Simulate the frequency with multiprocess'''
     p = Pool(10)
     p.map(Letter_Frequency,k_list)
 
-    '''#TODO: Infer the sample into letter, and cluster sample by the inferenced letter'''
-    sample2CpDNA, letter_sample = Infer2Letter(k_list)    
+    '''#TODO (d): Infer the sample into letter, and cluster sample by the inferenced letter'''
+    sample2letter, letter_sample = Infer2Letter(k_list)    
     
-    Cluster = partial(ClusterWithLetter, sample2CpDNA)
+    Cluster = partial(Cluster_Letter, sample2letter)
     p.map(Cluster, k_list)
     
-    '''#TODO: Summarizing'''
+    '''#TODO (e): Summarizing'''
     trans_from, letter_order = TransRatio_Letter(k_list)
     
     '''#TODO: 
