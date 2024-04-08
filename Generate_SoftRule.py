@@ -60,8 +60,7 @@ def partition_permute(n):
 
 def Factorial(sub_sample,sub_fmol):
     '''#TODO: C(sub_sample,sub_fmol) '''
-    sum_former = 0
-    sum_latter = 0
+    sum_former, sum_latter = 0, 0
     if sub_sample <= sub_fmol/2:
         sub_sample = sub_fmol - sub_sample
         
@@ -85,7 +84,7 @@ def Sample_Frequency(ratio_k, ratio_fmol, eft, uneft):
             #accordins current based ratiok , share uneffect to the effect site
             eft[s] += round((ratio_k[s]/k)*uneftsum) 
         
-        #if sum(eftitem) still unequal dpth(existins the situation up and down), to add the diseffiency to the maxvalue in the current eftitem
+        #data pruning
         if sum(eft) != deep :
             maxvalue = max(eft)
             maxcount = eft.count(maxvalue) 
@@ -109,11 +108,6 @@ def Sample_Frequency(ratio_k, ratio_fmol, eft, uneft):
                     else:
                         print('ERROR IN SUM!',ratio_k,ratio_fmol,eft,sum(eft))
                 else: 
-                    '''
-                    # if double maximam in effective depth and subratiok still unfix the problem
-                    # ban adding 1 to the minimum due to the minimum in eftitem equal 0 which is uneffective items
-                    # in the base of ratiok [2,0,4,4] , the result of [3,0,49,48] and [3,0,48,49] are equal
-                    '''
                     if sum(eft) == deep + 1:
                         eft[eft.index(max(eft))] += -1
                     elif sum(eft) == deep - 1:
@@ -136,7 +130,7 @@ def Sample_Frequency(ratio_k, ratio_fmol, eft, uneft):
 
 
 def Letter_Frequency(ratiok):
-    '''#TODO: record the simulate results  of single letter'''
+    '''#TODO: record the simulate results of single letter'''
     rootFre = '{}/1-FreqAll/{}.txt'.format(root, '.'.join(map(str,ratiok)))
     fw = open(rootFre,'w')
 
@@ -310,11 +304,11 @@ def Generate_Softrule():
     Mkdir( root + '/1-FreqAll/')
     Mkdir( root + '/2-Norm/')
 
-    '''#TODO: Simulate the Frequency with pool'''
+    '''#TODO: Simulate the Frequency with multiprocess'''
     p = Pool(10)
     p.map(Letter_Frequency,k_list)
 
-    '''#TODO: Infer the sample into letter, and Cluster sample by the inferenced letter'''
+    '''#TODO: Infer the sample into letter, and cluster sample by the inferenced letter'''
     sample2CpDNA, letter_sample = Infer2Letter(k_list)    
     
     Cluster = partial(ClusterWithLetter, sample2CpDNA)
@@ -327,7 +321,6 @@ def Generate_Softrule():
         Note: Generate the  transition library(SoftRule.py) by selecting from potential letters with the highest transition probabilities in the depth, to predict and correct letter errors.
         In the final application of Derrick-cp algorithm, the rules for multiple depths need to be summarized.
     '''
-    #ratio_min
     soft_rule = cp.deepcopy(k_dict)
     for l in trans_from: #lette: [[], [], ...]
         soft_rule[l] = [ ll[0] for ll in trans_from[l] if ll[-1] >= ratio_min ]
@@ -362,11 +355,12 @@ def read_arss():
     However, for the sake of computational efficiency in soft-decision strategies, 
     we opt to employ the pre-built letter transition library embedded within "SoftRule.py", 
     rather than calling "Generate_SoftRule.py" to compute letter transition probabilities anew for various sequencing depths.
+    
+    The "Generate_SoftRule.py" is utilized for computing letter transition probabilities at distinct sequencing depths.
+    In the final application of Derrick-cp algorithm, the transition library in "SoftRule.py" is directly called by decoder, instead of "Generate_SoftRule.py".
 '''
 if __name__ == "__main__":
-    '''#TODO: Global variance
-       #Note: The "Generate_SoftRule.py" is utilized for computing letter transition probabilities at distinct sequencing depths.
-       In the final application of Derrick-cp algorithm, the transition library in "SoftRule.py" is directly called by decoder, instead of "Generate_SoftRule.py".'''
+    #TODO: Global variance
     params = read_arss()
     print("The parameters are:")
     print("Resolution(k) = {}".format(params.resolution))
