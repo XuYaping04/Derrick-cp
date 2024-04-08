@@ -17,30 +17,46 @@ def Mkdir(path):
     folder = os.path.exists(path)
     if not folder:  os.makedirs(path)	
 
-def Sumk():
-    #TODO
-    list_k, dict_k = [], {}
-    for a in range(k+1):
-        for t in range(k+1):
-            for c in range(k+1):
-                for g in range(k+1):
-                    if a + t + c + g == k:
-                        list_k.append([a,t,c,g])
-                        dict_k[':'.join(map(str,[a,t,c,g]))] = []
-    return list_k,dict_k
+def partition_into_four_integer(n):
+    '''#TODO: partition the specified integer into four nonnegative integer'''
+    def backtrack(start, target, path, rel):
+        if len(path) == 4 and target == 0:
+            rel.append(path[:])
+            return
+        if len(path) == 4 or target == 0:
+            return
+        for i in range(start, target + 1):
+            path.append(i)
+            backtrack(i, target - i, path, rel)
+            path.pop()
 
-def Sumdeep():
-    #TODO
-    list_dp, dict_dp = [], {}
-    for a in range(deep+1):
-        for t in range(deep+1):
-            for c in range(deep+1):
-                for g in range(deep+1):
-                    if a + t + c + g == deep:
-                        list_dp.append([a,t,c,g])
-                        dict_dp[':'.join(map(str,[a,t,c,g]))] = [[],-1] #[[CpDNA,CpDNA,CpDNA],Fre]
-    return list_dp,dict_dp
+    rel = []
+    backtrack(0, n, [], rel)
+    return rel
 
+def permute_unique(nums):
+    '''#TODO: full permutation'''
+    if len(nums) == 0:
+        return [[]]
+    
+    unique_permutations = []
+    for i in range(len(nums)):
+        if i > 0 and nums[i] == nums[i-1]:
+            continue
+        remaining_nums = nums[:i] + nums[i+1:]
+        sub_permutations = permute_unique(remaining_nums)
+        for sub_permutation in sub_permutations:
+            unique_permutations.append([nums[i]] + sub_permutation)
+    
+    return unique_permutations
+
+def partition_permute(n):
+    '''#TODO'''
+    result = []
+    result_list = partition_into_four_integer(n)
+    for l in result_list:
+        result.extend(permute_unique(sorted(l)))
+    return result
 
 def Factorial(sub_sample,sub_fmol):
     '''#TODO: C(sub_sample,sub_fmol) '''
@@ -54,7 +70,6 @@ def Factorial(sub_sample,sub_fmol):
     for f in range(1,sub_fmol-sub_sample+1):
         sum_latter += math.log10(f)
     return sum_former - sum_latter
-
 
 def Sample_Frequency(ratio_k, ratio_fmol, eft, uneft):
     '''#TODO: ratio_fmol -- sample_dp'''
