@@ -47,11 +47,9 @@ def permute_unique(nums):
         sub_permutations = permute_unique(remaining_nums)
         for sub_permutation in sub_permutations:
             unique_permutations.append([nums[i]] + sub_permutation)
-    
     return unique_permutations
 
 def partition_permute(n):
-    '''#TODO'''
     result = []
     result_list = partition_into_four_integer(n)
     for l in result_list:
@@ -77,57 +75,55 @@ def Sample_Frequency(ratio_k, ratio_fmol, eft, uneft):
         comsum.append(deep*math.log10(0.99))
         comsum.sort()
         return sum(comsum)
+
+    uneftsum = sum(uneft) 
+    for s in range(4):
+        #accordins current based ratiok , share uneffect to the effect site
+        eft[s] += round((ratio_k[s]/k)*uneftsum) 
     
-    else:
-        uneftsum = sum(uneft) 
-        for s in range(4):
-            #accordins current based ratiok , share uneffect to the effect site
-            eft[s] += round((ratio_k[s]/k)*uneftsum) 
-        
-        #data pruning
-        if sum(eft) != deep :
-            maxvalue = max(eft)
-            maxcount = eft.count(maxvalue) 
-            if maxcount == 1 :  
+    #data pruning
+    if sum(eft) != deep :
+        maxvalue = max(eft)
+        maxcount = eft.count(maxvalue) 
+        if maxcount == 1 :  
+            if sum(eft) == deep + 1:
+                eft[eft.index(max(eft))] += -1
+            elif sum(eft) == deep - 1:
+                eft[eft.index(max(eft))] += 1
+            else:
+                print('ERROR IN SUM!',ratio_k,ratio_fmol,eft,sum(eft))
+        else: 
+            # if existins lots of maximum in eftitem, then choosins the maximum ratio in ratiok to add difefficiency
+            multi_maxsite = [[s,ratio_k[s]] for s in range(4) if eft[s] == maxvalue]  #[multimaxsite, subratio in ratiok]
+            multi_maxsite_sort = sorted(multi_maxsite,key=(lambda x:x[-1]),reverse=True) # to sort multimaxsite by subratio in ratiok
+            multi_maxratio = list(np.array(multi_maxsite_sort).T[1]).count(multi_maxsite_sort[0][1]) # to ensure the num of maximum of subratio in ratiok  , to Turn the multimaxsite
+            if multi_maxratio == 1:
+                if sum(eft) == deep + 1:
+                    eft[multi_maxsite_sort[0][0]] += -1
+                elif sum(eft) == deep - 1:
+                    eft[multi_maxsite_sort[0][0]] += 1
+                else:
+                    print('ERROR IN SUM!',ratio_k,ratio_fmol,eft,sum(eft))
+            else: 
                 if sum(eft) == deep + 1:
                     eft[eft.index(max(eft))] += -1
                 elif sum(eft) == deep - 1:
                     eft[eft.index(max(eft))] += 1
                 else:
                     print('ERROR IN SUM!',ratio_k,ratio_fmol,eft,sum(eft))
-            else: 
-                # if existins lots of maximum in eftitem, then choosins the maximum ratio in ratiok to add difefficiency
-                multi_maxsite = [[s,ratio_k[s]] for s in range(4) if eft[s] == maxvalue]  #[multimaxsite, subratio in ratiok]
-                multi_maxsite_sort = sorted(multi_maxsite,key=(lambda x:x[-1]),reverse=True) # to sort multimaxsite by subratio in ratiok
-                multi_maxratio = list(np.array(multi_maxsite_sort).T[1]).count(multi_maxsite_sort[0][1]) # to ensure the num of maximum of subratio in ratiok  , to Turn the multimaxsite
-                if multi_maxratio == 1:
-                    if sum(eft) == deep + 1:
-                        eft[multi_maxsite_sort[0][0]] += -1
-                    elif sum(eft) == deep - 1:
-                        eft[multi_maxsite_sort[0][0]] += 1
-                    else:
-                        print('ERROR IN SUM!',ratio_k,ratio_fmol,eft,sum(eft))
-                else: 
-                    if sum(eft) == deep + 1:
-                        eft[eft.index(max(eft))] += -1
-                    elif sum(eft) == deep - 1:
-                        eft[eft.index(max(eft))] += 1
-                    else:
-                        print('ERROR IN SUM!',ratio_k,ratio_fmol,eft,sum(eft))
-                        
-                        
-        comsum = [Factorial(eft[s],ratio_fmol[s]) for s in range(4)]
-        error_ratio = Factorial(uneftsum,deep) + uneftsum*math.log10(0.01) + (deep-uneftsum)*math.log10(0.99)
-        comsum.append(error_ratio)
-        
-        uneft2value = 0
-        for s in range(len(uneft)):
-            uneft2value += Factorial(uneft[s],sum(uneft[s:])) + uneft[s]*math.log10(1/len(uneft))
+                    
+                    
+    comsum = [Factorial(eft[s],ratio_fmol[s]) for s in range(4)]
+    error_ratio = Factorial(uneftsum,deep) + uneftsum*math.log10(0.01) + (deep-uneftsum)*math.log10(0.99)
+    comsum.append(error_ratio)
+    
+    uneft2value = 0
+    for s in range(len(uneft)):
+        uneft2value += Factorial(uneft[s],sum(uneft[s:])) + uneft[s]*math.log10(1/len(uneft))
 
-        comsum.append(uneft2value)
-        comsum.sort()
-        return sum(comsum)
-
+    comsum.append(uneft2value)
+    comsum.sort()
+    return sum(comsum)
 
 def Letter_Frequency(ratiok):
     '''#TODO: record the results of single letter'''
@@ -156,12 +152,11 @@ def Letter_Frequency(ratiok):
     fw.close()
     return 0
 
-
 def Infer2Letter(ratiok):
     '''#TODO: Inference from sample into letter'''
     rootFre = '{}/1-FreqAll/'.format(root)
-    
     sample2letter = cp.deepcopy(dp_dict)
+    
     for s in range(len(ratiok)):
         normratiok = ':'.join(map(str,ratiok[s]))
         inputpath = '{}/{}.txt'.format(rootFre, '.'.join(map(str,ratiok[s])))
@@ -178,8 +173,6 @@ def Infer2Letter(ratiok):
                     sample2letter[sample][0].append(normratiok)
                 else:
                     continue
-            else:
-                continue
         fi.close()
 
     '''#TODO: Cluster the sample by the infered letter'''
@@ -189,7 +182,6 @@ def Infer2Letter(ratiok):
             letter_sample[sample2letter[key][0][s]].append([key,sample2letter[key][1]])
     return sample2letter, letter_sample
 
-
 def Cluster_Letter(sample2letter, sub_ratio):
     '''#TODO: Cluster the sample by letter'''
     Frepath = '{}/1-FreqAll/{}.txt'.format( root, '.'.join(map(str,sub_ratio)))
@@ -197,15 +189,12 @@ def Cluster_Letter(sample2letter, sub_ratio):
 
     fi = open(Frepath,'r')
     fo = open(Normpath,'w')
-    CpDNA2Cluster = cp.deepcopy(k_dict)
     
+    CpDNA2Cluster = cp.deepcopy(k_dict)
     for line in fi:
         if re.search(r'^\d',line):
             line = line.strip().split()
             sample = line[0]  #[line[0], line[1]] = [Sample,Fre]
-            '''# sample2letter = { Sample : [[CpDNA1,CpDNA2,...],Fre], ... , ... }
-               # letter_sample = { CpDNA1 : [[Sample1,Fre],[Sample2,Fre],[Sample3,Fre],...] , CpDNA2 : [[...,...],[...,...]] ] ]
-            '''
             for s in sample2letter[sample][0]:
                 CpDNA2Cluster[s].append( [line[0], line[1]] )
     fi.close()
@@ -246,7 +235,6 @@ def TransRatio_Letter(k_list):
         
         all_fre.sort()
         undervalue = all_fre[-1] - 300
-        
         sum1 = sum( [ pow(10,all_fre[i]-undervalue) for i in range(len(all_fre)) ] )
         for sub_key in norm_fre_rel:
             sum2 = 0 
