@@ -1,9 +1,4 @@
 #-*- coding : utf-8-*-
-"""
-Created on Wed Jun 22 14:27:09 2022
-
-@author: Xu Yaping
-"""
 
 import os, time, itertools
 import reedsolo as rs
@@ -31,25 +26,20 @@ class Digital2Seq_Encode():
             self.padding_bits = self.CpDNA2bit[1] - padding_val[1]
         del padding_val
         
-        #Enconding: The size of bits in one whole matrix
+        #Encode
         self.Pld_bit_size = self.rsK * self.Symbol2bit[1]
         self.Matrix_bit_size = self.Pld_bit_size * self.matrix_size - self.crc
         assert self.read_size % self.matrix_size == 0
         self.MultiMatrix_bit_size = self.Matrix_bit_size * (self.read_size//self.matrix_size)
         
-        '''
-        # TODO 0-3:  The basic informatio of Reed-solomon code
-        mes_ecc = rs.rs_encode_msg(mes_en, self.rsD, gen=self.generator[self.rsD])
-        '''
+        '''# TODO 0-3:  The basic informatio of Reed-solomon code
+        mes_ecc = rs.rs_encode_msg(mes_en, self.rsD, gen=self.generator[self.rsD])'''
         self.prim = rs.find_prime_polys(generator = self.GFint[0], c_exp=self.GFint[1], fast_primes=True, single=True)
         self.table_rel = rs.init_tables(generator = self.GFint[0], c_exp=self.GFint[1], prim=self.prim)
         self.generator = rs.rs_generator_poly_all(self.rsN)
         
-
     def Digital2Seq(self, file_in: str, file_encode: str, file_encode_col: str, need_logs: bool = True):
-        '''
-        # TODO 1-0: Read the binary information and padding '0' to form the complete multi-matrix. In addition, random with Pi.
-        '''
+        '''# TODO 1-0: Read the binary information and padding '0' to form the complete multi-matrix. In addition, random with Pi'''
         bits = Digital2Seq_Encode.Digital2Bits(file_in)
         bits += bin(len(bits)).split('b')[1].zfill(64)
         div_infr = divmod(len(bits), self.MultiMatrix_bit_size)
@@ -77,7 +67,6 @@ class Digital2Seq_Encode():
                 read_cpdna = [MultiMatrix_CpDNA[ll][l] for ll in range(len(MultiMatrix_CpDNA))]
                 f_en.write('>contig{}\n'.format(row_no))
                 f_en.write('{}\n'.format(','.join(read_cpdna)))
-                
 
             for l in MultiMatrix_CpDNA:
                 Col_no += 1
@@ -87,17 +76,7 @@ class Digital2Seq_Encode():
         f_en_col.close()
         return CRC_no
 
-
     def Encode_CRCMatirx(self, Matirx_Bit, need_logs=True):
-        '''
-        #Py2:
-            CRC_digital:  1907163293
-            CRC_bit:  01110001101011010000000010011101
-        #Py3:
-            block2crc = block_crc.encode('utf-8')
-            CRC_digital = crc32(block2crc)
-            CRC_bit = '{:08b}'.format(CRC_digital).zfill(32)
-        '''
         '''# TODO 2-0: Encode the matrix with reed-solomon encoder and CRC32, which consists of ten consecutive blocks '''
         Matirx_Bit_Bin = Matirx_Bit.encode('utf-8')
         CRC_digital = crc32(Matirx_Bit_Bin)
@@ -122,7 +101,6 @@ class Digital2Seq_Encode():
                 CpDNA_val = CpDNA_str if CpDNA_str != '' else '0'
                 Block_CpDNA.extend(self.Bit2CpDNA_set[ CpDNA_val ])
             Matrix_CpDNA.append(Block_CpDNA)
-            
         return Matrix_CpDNA
 
     @staticmethod
@@ -139,75 +117,16 @@ class Digital2Seq_Encode():
             else:
                 val = '0' if carry == 1 else '1'
             result.append(val)            
-                
         if carry == 1:
-            result.append('1')
-            
+            result.append('1')            
         return ''.join(result[::-1])
 
-    '''
-    @staticmethod
-    def Trans_CpDNA2Bit(Cp_set: list, conbin_count: int):    
-        Bit2CpDNA, fomer_bit = {}, -1
-        if conbin_count == 3:
-            #Symbol is equal to three Cpdna#
-            for l1 in Cp_set:
-                for l2 in Cp_set:
-                    for l3 in Cp_set:
-                        if fomer_bit == -1: 
-                            bit_val = '0'
-                        else:                        
-                            bit_val = Digital2Seq_Encode.Binary_add(fomer_bit, '1')
-                        fomer_bit = bit_val
-                        Bit2CpDNA[bit_val] = [l1, l2, l3]
-        elif conbin_count == 2:
-            #Symbol is equal to three Cpdna#
-            for l1 in Cp_set:
-                for l2 in Cp_set:
-                    if fomer_bit == -1: 
-                        bit_val = '0'
-                    else:                        
-                        bit_val = Digital2Seq_Encode.Binary_add(fomer_bit, '1')
-                    fomer_bit = bit_val
-                    Bit2CpDNA[bit_val] = [l1, l2]
-        elif conbin_count == 1:
-            #Symbol is equal to three Cpdna#
-            for l1 in Cp_set:
-                if fomer_bit == -1:
-                   bit_val = '0'
-                else:
-                   bit_val = Digital2Seq_Encode.Binary_add(fomer_bit, '1') 
-                fomer_bit = bit_val
-                Bit2CpDNA[bit_val] = [l1]
-        else:
-            print('ERROR in forming GF2Cpdna.')
-            exit(1)
-        return Bit2CpDNA
-    
-    
-    @staticmethod
-    def Combination_Count(candi_L: list, conbin_count: int):    
-        """List all combinations: choose k elements from list L"""
-        n_L = len(candi_L)
-        com_rel = []
-        for l in range(n_L-conbin_count+1):
-            if conbin_count > 1:
-                newL = candi_L[l+1:]
-                Comb = Digital2Seq_Encode.Combination_Count(newL, conbin_count - 1)
-                for item in Comb:
-                    item.insert(0, candi_L[l])
-                    com_rel.append(item)
-            else:
-                com_rel.append([candi_L[l]])
-        return com_rel
-    '''
-        
     @staticmethod
     def Trans_CpDNA2Bit(Cp_set: list, CpDNA2bit: list):
         '''#TODO: The mapping rule between letters and bits
             #CpDNA2bit[0] CpDNA is equal to CpDNA2bit[1] bits, e.g.:19bits is equal to 3 letters in Sup.Fig.5
-            #CpDNA_combin = Digital2Seq_Encode.Combination_Count(Cp_set, CpDNA2bit[0])
-        '''
+            #CpDNA_combin = Digital2Seq_Encode.Combination_Count(Cp_set, CpDNA2bit[0])'''
+        
         CpDNA_combin = []
         for l in itertools.combinations_with_replacement(Cp_set, CpDNA2bit):
             ll_list = [ll for ll in itertools.permutations(l)]
@@ -227,12 +146,10 @@ class Digital2Seq_Encode():
             #CpDNA2Bit[','.join(CpDNA_combin[l])] = bit_val
         return Bit2CpDNA
 
-
     @staticmethod
     def Basic_infr(k: int, alp: int):
         '''#TODO: The basic information used for encode and decode.
             #The composite dna set filtered by their accuracy and used to the digital data storage (DDS), and the sizes of Cpdna set are convenient to converse between binary information and composite DNA letters#
-            depth = 50 in k = 6,8,10
         '''
         Cpdna_set = {
             10: {0: '10:0:0:0', 1: '0:10:0:0', 2: '0:0:10:0', 3: '0:0:0:10', 4: '9:1:0:0', 5: '9:0:1:0', 6: '9:0:0:1', 7: '1:9:0:0', 8: '1:0:9:0', 9: '1:0:0:9', 10: '0:9:1:0', 11: '0:9:0:1', 12: '0:1:9:0', 13: '0:1:0:9', 14: '0:0:9:1', 15: '0:0:1:9', 16: '8:2:0:0', 17: '8:0:2:0', 18: '8:0:0:2', 19: '2:8:0:0', 20: '2:0:8:0', 21: '2:0:0:8', 22: '0:8:2:0', 23: '0:8:0:2', 24: '0:2:8:0', 25: '0:2:0:8', 26: '0:0:8:2', 27: '0:0:2:8', 28: '7:3:0:0', 29: '7:0:3:0', 30: '7:0:0:3', 31: '3:7:0:0', 32: '3:0:7:0', 33: '3:0:0:7', 34: '0:7:3:0', 35: '0:7:0:3', 36: '0:3:7:0', 37: '0:3:0:7', 38: '0:0:7:3', 39: '0:0:3:7', 40: '6:4:0:0', 41: '6:0:4:0', 42: '6:0:0:4', 43: '4:6:0:0', 44: '4:0:6:0', 45: '4:0:0:6', 46: '0:6:4:0', 47: '0:6:0:4', 48: '0:4:6:0', 49: '0:4:0:6', 50: '0:0:6:4', 51: '0:0:4:6', 52: '5:5:0:0', 53: '5:0:5:0', 54: '5:0:0:5', 55: '0:5:5:0', 56: '0:5:0:5', 57: '0:0:5:5', 58: '8:1:1:0', 59: '8:1:0:1', 60: '8:0:1:1', 61: '1:8:1:0', 62: '1:8:0:1', 63: '1:1:8:0', 64: '1:1:0:8', 65: '1:0:8:1', 66: '1:0:1:8', 67: '0:8:1:1', 68: '0:1:8:1', 69: '0:1:1:8', 70: '7:2:1:0', 71: '7:2:0:1', 72: '7:1:2:0', 73: '7:1:0:2', 74: '7:0:2:1', 75: '7:0:1:2', 76: '2:7:1:0', 77: '2:7:0:1', 78: '2:1:7:0', 79: '2:1:0:7', 80: '2:0:7:1', 81: '2:0:1:7', 82: '1:7:2:0', 83: '1:7:0:2', 84: '1:2:7:0', 85: '1:2:0:7', 86: '1:0:7:2', 87: '1:0:2:7', 88: '0:7:2:1', 89: '0:7:1:2', 90: '0:2:7:1', 91: '0:2:1:7', 92: '0:1:7:2', 93: '0:1:2:7', 94: '6:3:1:0', 95: '6:3:0:1', 96: '6:1:3:0', 97: '6:1:0:3', 98: '6:0:3:1', 99: '6:0:1:3', 100: '3:6:1:0', 101: '3:6:0:1', 102: '3:1:6:0', 103: '3:1:0:6', 104: '3:0:6:1', 105: '3:0:1:6', 106: '1:6:3:0', 107: '1:6:0:3', 108: '1:3:6:0', 109: '1:3:0:6', 110: '1:0:6:3', 111: '1:0:3:6', 112: '0:6:3:1', 113: '0:6:1:3', 114: '0:3:6:1', 115: '0:3:1:6', 116: '0:1:6:3', 117: '0:1:3:6', 118: '5:4:1:0', 119: '5:4:0:1', 120: '5:1:4:0', 121: '5:1:0:4', 122: '5:0:4:1', 123: '5:0:1:4', 124: '4:5:1:0', 125: '4:5:0:1', 126: '4:1:5:0', 127: '4:1:0:5', 128: '4:0:5:1', 129: '4:0:1:5', 130: '1:5:4:0', 131: '1:5:0:4', 132: '1:4:5:0', 133: '1:4:0:5', 134: '1:0:5:4', 135: '1:0:4:5', 136: '0:5:4:1', 137: '0:5:1:4', 138: '0:4:5:1', 139: '0:4:1:5', 140: '0:1:5:4', 141: '0:1:4:5', 142: '6:2:2:0', 143: '6:2:0:2', 144: '6:0:2:2', 145: '2:6:2:0', 146: '2:6:0:2', 147: '2:2:6:0', 148: '2:2:0:6', 149: '2:0:6:2', 150: '2:0:2:6', 151: '0:6:2:2', 152: '0:2:6:2', 153: '0:2:2:6', 154: '5:3:2:0', 155: '5:3:0:2', 156: '5:2:3:0', 157: '5:2:0:3', 158: '5:0:3:2', 159: '5:0:2:3', 160: '3:5:2:0', 161: '3:5:0:2', 162: '3:2:5:0', 163: '3:2:0:5', 164: '3:0:5:2', 165: '3:0:2:5', 166: '2:5:3:0', 167: '2:5:0:3', 168: '2:3:5:0', 169: '2:3:0:5', 170: '2:0:5:3', 171: '2:0:3:5', 172: '0:5:3:2', 173: '0:5:2:3', 174: '0:3:5:2', 175: '0:3:2:5', 176: '0:2:5:3', 177: '0:2:3:5', 178: '4:4:2:0', 179: '4:4:0:2', 180: '4:2:4:0', 181: '4:2:0:4', 182: '4:0:4:2', 183: '4:0:2:4', 184: '2:4:4:0', 185: '2:4:0:4', 186: '2:0:4:4', 187: '0:4:4:2', 188: '0:4:2:4', 189: '0:2:4:4', 190: '7:1:1:1', 191: '1:7:1:1', 192: '1:1:7:1', 193: '1:1:1:7', 194: '6:2:1:1', 195: '6:1:2:1', 196: '6:1:1:2', 197: '2:6:1:1', 198: '2:1:6:1', 199: '2:1:1:6', 200: '1:6:2:1', 201: '1:6:1:2', 202: '1:2:6:1', 203: '1:2:1:6', 204: '1:1:6:2', 205: '1:1:2:6', 206: '5:3:1:1', 207: '5:1:3:1', 208: '5:1:1:3', 209: '3:5:1:1', 210: '3:1:5:1', 211: '3:1:1:5', 212: '1:5:3:1', 213: '1:5:1:3', 214: '1:3:5:1', 215: '1:3:1:5', 216: '1:1:5:3', 217: '1:1:3:5', 218: '4:4:1:1', 219: '4:1:4:1', 220: '4:1:1:4', 221: '1:4:4:1', 222: '1:4:1:4', 223: '1:1:4:4', 224: '5:2:2:1', 225: '5:2:1:2', 226: '5:1:2:2', 227: '2:5:2:1', 228: '2:5:1:2', 229: '2:2:5:1', 230: '2:2:1:5', 231: '2:1:5:2', 232: '2:1:2:5', 233: '1:5:2:2', 234: '1:2:5:2', 235: '1:2:2:5', 236: '4:1:3:2', 237: '4:1:2:3', 238: '3:4:2:1', 239: '3:4:1:2', 240: '3:2:4:1', 241: '3:2:1:4', 242: '3:1:4:2', 243: '3:1:2:4', 244: '2:4:3:1', 245: '2:4:1:3', 246: '2:3:4:1', 247: '2:3:1:4', 248: '2:1:4:3', 249: '2:1:3:4', 250: '1:4:3:2', 251: '1:4:2:3', 252: '1:3:4:2', 253: '1:3:2:4', 254: '1:2:4:3', 255: '1:2:3:4', 256: '4:3:3:0', 257: '4:3:0:3', 258: '4:0:3:3', 259: '3:4:3:0', 260: '3:4:0:3', 261: '3:3:4:0', 262: '3:3:0:4', 263: '3:0:4:3', 264: '3:0:3:4', 265: '0:4:3:3', 266: '0:3:4:3', 267: '0:3:3:4', 268: '4:3:2:1', 269: '4:3:1:2', 270: '4:2:3:1', 271: '4:2:1:3', 272: '3:3:3:1', 273: '3:3:1:3', 274: '3:1:3:3', 275: '1:3:3:3', 276: '4:2:2:2', 277: '2:4:2:2', 278: '2:2:4:2', 279: '2:2:2:4', 280: '3:3:2:2', 281: '3:2:3:2', 282: '3:2:2:3', 283: '2:3:3:2', 284: '2:3:2:3', 285: '2:2:3:3'},
@@ -279,12 +196,10 @@ class Digital2Seq_Encode():
             else:
                 continue
         return rel_bit    
-    
 
 def read_args():
     """
     Read arguments from the command line.
-
     :return: parameters.
     """
     parser = ArgumentParser()
@@ -307,7 +222,6 @@ def read_args():
     parser.add_argument("-rsN", "--rsN", required=False, type=int,
                         help="RS(rsK, rsN)")
     return parser.parse_args()
-
 
 if __name__ == "__main__":
     '''#ToDO: Global variance#'''
