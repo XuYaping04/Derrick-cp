@@ -14,7 +14,6 @@ from copy import deepcopy
 from argparse import ArgumentParser
 
 class Seq2Digital_Decode():
-    
     def __init__(self, k: int, alp_size: int, rsK: int = 41, rsN: int = 45):
         '''# TODO 0-0: Initialize the coder of Matirx consisting of ten consecutive blocks and CRC32.'''
         self.k, self.alp_size, self.matrix_size, self.read_size , self.crc= k, alp_size, 10, 150, 32
@@ -27,7 +26,6 @@ class Seq2Digital_Decode():
         self.Bit2CpDNA_set, self.CpDNA2Bit_set = Seq2Digital_Decode.Trans_CpDNA2Bit(list(self.Cpdna_set.values()), self.CpDNA2bit[0])
         self.Max_Sr_Symbol, self.Max_Location, self.Max_Comloc = Seq2Digital_Decode.Basic_infr_SR(self.k)
 
-
         '''# TODO 0-2:  Simualte the padding number of bits, to comlish the mapping between bits and letters.'''
         padding_val = divmod(self.rsN * self.Symbol2bit[1], self.CpDNA2bit[1])
         if padding_val[1] != 0:
@@ -37,7 +35,6 @@ class Seq2Digital_Decode():
             self.Block_cpdna_size = (padding_val[0])*self.CpDNA2bit[0]
             self.padding_bits = 0
         del padding_val
-
 
         #Enconding: The size of bits in one whole matrix
         self.Pld_bit_size = self.rsK * self.Symbol2bit[1]
@@ -62,7 +59,6 @@ class Seq2Digital_Decode():
         
         '''# TODO 0-4: Recording '''
         self.Block_Depth, self.decode_ID = [], 0
-    
     
     def Coder_Matrix(self, Matirx_Norm: list, Depth_list: list, need_log=False):
         """
@@ -104,7 +100,6 @@ class Seq2Digital_Decode():
             Mat_Decode_bit = '0'*self.Matrix_bit_size
         return Mat_TF, Mat_Deal, Mat_Decode, Mat_Decode_bit
 
-
     def Coder_Matrix_Hard(self,  Mat_H_letter: list):
         '''
         TODO: Decode one matrix containing ten RS blocks with Reed-Solomon(Hard decision)
@@ -118,7 +113,6 @@ class Seq2Digital_Decode():
             #[ID, Decoded_result(str), [nr_pdl(list), sr_pdl(list)], dist(list)]
             hard_rel.append( [self.decode_ID, block_rel[0], [hard_block[1], block_rel[1]], hard_block[2]] )
         return hard_rel
-
 
     def Coder_Block_Hard(self, rs_block: list):
         '''
@@ -163,7 +157,6 @@ class Seq2Digital_Decode():
         else:
             return ['UnDe', []]
 
-
     def Coder_Matrix_Soft(self, Mat_H_deal: list, Mat_H_letter: list, Mat_H_rel: list, need_log=False):        
         '''#TODO -0: Decode each block individually'''
         Mat_record, Mat_Infr = {}, []
@@ -202,8 +195,6 @@ class Seq2Digital_Decode():
             return Mat_TF, Mat_Deal, Sr_Mat_letter, Sr_Mat_bits
         else:
             return False, 'Failure(soft)', Sr_Mat_letter, Sr_Mat_bits
-    
-
 
     def Soft_Failure(self, Mat_record, Mat_Infr, Mat_letter, need_log=False):
         '''#TODO -0: ---RS_Block(decoder fuilure and error) = 1---'''
@@ -273,7 +264,6 @@ class Seq2Digital_Decode():
                         return False, [], Mat_loc_pause, Mat_record_1, Mat_letter, Mat_bits
         return False, [], Mat_loc_pause, Mat_record_1, Mat_letter, Mat_bits
 
-
     def Soft_OneBlock(self, rec_s, mat_record, mat_Infr, mat_letter, need_log=False):
         '''#TODO -0: Decode one RS block'''
         self.decode_ID = mat_Infr[0]
@@ -300,7 +290,6 @@ class Seq2Digital_Decode():
                             return True, mat_record, mat_letter_1, Mat_bits
         return False, mat_record, [], ''
 
-
     def Soft_1Block_ErrOne(self, block_infr):
         '''#TODO -0: Decode one read and correct 1 error
             Read arguments from the command line.
@@ -326,7 +315,6 @@ class Seq2Digital_Decode():
             else:
                 return False, sr_uniq
         return False, sr_uniq
-
 
     def Soft_MoreBlock_ErrOne(self, mat_record, mat_infr, mat_letter, need_log=False):
         '''#TODO -0: Decode multi-block witg one letter error.'''
@@ -378,8 +366,7 @@ class Seq2Digital_Decode():
                     
         '''All RS_Eq have been decoded on OverOneCode'''
         return False, [], [mat_record, mat_record_1], mat_letter, ''
-
-            
+    
     def Soft_MoreBlock_MoreErr(self, rec_cnt_s, rec_cnt_e, mat_loc_pause, mat_record, mat_infr, mat_letter, need_log=False):
         '''#TODO -0:  Decode multi-block with error more than one'''
         if need_log:   
@@ -511,7 +498,6 @@ class Seq2Digital_Decode():
             del empty, unempty
         return False, mat_loc_pause, mat_record, [], ''
 
-
     def Soft_RecOne(self, rec_cnt, rec_start_loc, rec_loc, rec_block ):
         '''#TODO: remedy one error.'''
         rec_comindex_set = Seq2Digital_Decode.Combin_Order(self, rec_cnt, rec_loc)
@@ -563,7 +549,6 @@ class Seq2Digital_Decode():
                     dpindex_rel.append(dpindex_soft_rel[1])
                     
         return dpindex_rel
-    
 
     def Combin_Order(self, com_cnt, com_loc):
         '''#TODO: Selects out the candidate error position set using Euclidean distance and sort in reversed order'''
@@ -587,7 +572,6 @@ class Seq2Digital_Decode():
         
         return tocombin_rel_sort_set[:limit_com]
 
-
     def Cer_CRC_Block(self, Cer_sr_pdl_Com, Cer_ID, cer_Matrix):
         '''#TODO: Verify with crc_32 in Matrix containing ten consecutive blocks'''
         cer_sr_pool_Infr = [[ Cer_ID[l], Cer_sr_pdl_Com[l]] for l in range(len(Cer_sr_pdl_Com))]
@@ -601,7 +585,6 @@ class Seq2Digital_Decode():
             return [True, cer_crc_Matrix, Mat_bits]
         else:
             return [False, [], '']
-
 
     def Coder_CRC32(self, CRC_Cpdna):
         '''#TODO:  Verify one matrix with CRC32'''
@@ -625,14 +608,12 @@ class Seq2Digital_Decode():
         else:
             return False, ''
 
-
     def Letter2GFint(self,  block_cpdna: list):
         '''#TODO: Convert the letters into GFint in decoding'''
         rs_block_bits = [ self.CpDNA2Bit_set[','.join(block_cpdna[l:l+self.CpDNA2bit[0]])].zfill(self.CpDNA2bit[1])  for l in range(0, self.Block_cpdna_size, self.CpDNA2bit[0])]
         block_bits = ''.join(rs_block_bits)[:-self.padding_bits] if self.padding_bits != 0 else ''.join(rs_block_bits)
         Block_GFint = [ int(block_bits[l:l+self.Symbol2bit[-1]], 2) for l in range(0, self.Block_bit_size, self.Symbol2bit[-1])]
         return Block_GFint
-
 
     def GFint2Letter(self,  block_GFint: list) -> list:
         '''#TODO: Convert the GFint into letters #GFint2Bit and padding bits in decoding'''
@@ -644,7 +625,6 @@ class Seq2Digital_Decode():
             CpDNA_val = CpDNA_str if CpDNA_str != '' else '0'
             Block_CpDNA.extend(self.Bit2CpDNA_set[ CpDNA_val ])
         return Block_CpDNA        
-
 
     @staticmethod
     def Basic_infr(k: int, alp: int):
@@ -669,7 +649,6 @@ class Seq2Digital_Decode():
         CpDNA2bit = { 64: [1, 6], 84:[3, 19], 128: [1, 7], 258: [1, 8] }        
         
         return Cpdna_k_set, Symbol2bit[alp], GFint, CpDNA2bit[alp]
-
     
     @staticmethod
     def Trans_CpDNA2Bit(Cp_set: list, CpDNA2bit: list):
@@ -730,7 +709,6 @@ class Seq2Digital_Decode():
             result.append('1')
             
         return ''.join(result[::-1])
-
 
     @staticmethod
     def Basic_infr_SR(k):
@@ -893,7 +871,6 @@ class Seq2Digital_Decode():
                 break
         return 0
 
-
 def read_args():
     """
     #TODO: Read arguments from the command line.
@@ -920,7 +897,6 @@ def read_args():
                         help="RS(rsK, rsN)")
     #if the rsN changes, the others parameters in soft-decision decoding need to be adjusted in further.
     return parser.parse_args()
-
 
 if __name__ == "__main__":
     '''#TODO: global variance#'''
