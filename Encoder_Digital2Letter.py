@@ -224,7 +224,7 @@ def read_args():
     return parser.parse_args()
 
 if __name__ == "__main__":
-    '''#ToDO: Global variance#'''
+    '''#TODO: Global variance#'''
     params = read_args()
     print("The parameters are:")
     print("Resolution(k) = {}".format(params.resolution)) #-k
