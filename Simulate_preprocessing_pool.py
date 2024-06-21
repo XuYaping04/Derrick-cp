@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Apr  6 14:23:33 2022
-
-@author: Xu Yaping
-"""
 
 import numpy as np
 import re, math, random, time
@@ -12,6 +7,7 @@ from functools import partial
 from multiprocessing import Pool
 from argparse import ArgumentParser
 from Map_Candidate_set import Candidate_set
+
 
 class Simulate_wet_pipeline():
     def __init__(self, k: int, alp_size: int, deep: int, err_rate: float, sample_val: float, rsK: int = 41, rsN: int = 45):
@@ -32,7 +28,6 @@ class Simulate_wet_pipeline():
         self.error_rate = float(err_rate)
         self.error_seed = random.sample(range( 1, int(1/self.error_rate) + 1), 1)[0]
         self.sample_val = float(sample_val)
-
 
     def Syn_Inferred(self, file_en: str, file_wet: str, file_wet_col: str, need_logs: bool = True):
         print("Encoded sequences path = ", file_en) #-i
@@ -92,7 +87,6 @@ class Simulate_wet_pipeline():
         f_nr_col.close()
         return 0 
     
-
     def NormDepth(self, file_en):
         '''#TODO 3-0: Simulate each matrix_crc32 in multithread#'''
         encode_no = 0 #-1
@@ -111,7 +105,6 @@ class Simulate_wet_pipeline():
                 nums_set[n] = random.sample(range(real_deep,self.deep),1)[0]
         return nums_set
     
-
     def Basic_infr(self): #->dict, list, list, list
         '''#The composite dna set filtered by their accuracy and used to the digital data storage (DDS), and the sizes of Cpdna set are convenient to converse between binary information and composite DNA letters#
             #k=10(400): {'0:0:0:10': 0.99999995, '0:0:10:0': 0.99999995, '0:10:0:0': 0.99999995, '10:0:0:0': 0.99999995, '1:9:0:0': 0.99740026, '0:0:1:9': 0.99740026, '0:0:9:1': 0.99740026, '0:1:0:9': 0.99740026, '0:1:9:0': 0.99740026, '0:9:0:1': 0.99740026, '0:9:1:0': 0.99740026, '1:0:0:9': 0.99740026, '1:0:9:0': 0.99740026, '9:0:0:1': 0.99740026, '9:0:1:0': 0.99740026, '9:1:0:0': 0.99740026, '0:1:1:8': 0.99546847, '0:1:8:1': 0.99546847, '0:8:1:1': 0.99546847, '1:0:1:8': 0.99546847, '1:0:8:1': 0.99546847, '1:1:0:8': 0.99546847, '1:1:8:0': 0.99546847, '1:8:0:1': 0.99546847, '1:8:1:0': 0.99546847, '8:0:1:1': 0.99546847, '8:1:0:1': 0.99546847, '8:1:1:0': 0.99546847, '1:1:1:7': 0.99406382, '1:7:1:1': 0.99406382, '7:1:1:1': 0.99406382, '1:1:7:1': 0.99406382, '0:0:2:8': 0.98716647, '0:0:8:2': 0.98716647, '0:2:0:8': 0.98716647, '0:8:0:2': 0.98716647, '0:8:2:0': 0.98716647, '2:0:0:8': 0.98716647, '0:2:8:0': 0.98716647, '2:0:8:0': 0.98716647, '2:8:0:0': 0.98716647, '8:0:0:2': 0.98716647, '8:0:2:0': 0.98716647, '8:2:0:0': 0.98716647, '6:2:1:1': 0.98628256, '6:1:2:1': 0.98628256, '1:1:2:6': 0.98628256, '1:6:2:1': 0.98628256, '6:1:1:2': 0.98628256, '1:1:6:2': 0.98628256, '1:2:1:6': 0.98628256, '1:2:6:1': 0.98628256, '1:6:1:2': 0.98628256, '2:6:1:1': 0.98628256, '2:1:1:6': 0.98628256, '2:1:6:1': 0.98628256, '0:1:7:2': 0.98620412, '0:2:1:7': 0.98620412, '1:7:0:2': 0.98620412, '1:7:2:0': 0.98620412, '2:0:1:7': 0.98620412, '2:0:7:1': 0.98620412, '2:1:0:7': 0.98620412, '2:1:7:0': 0.98620412, '2:7:0:1': 0.98620412, '2:7:1:0': 0.98620412, '7:0:1:2': 0.98620412, '7:0:2:1': 0.98620412, '7:1:0:2': 0.98620412, '7:1:2:0': 0.98620412, '7:2:0:1': 0.98620412, '7:2:1:0': 0.98620412, '0:1:2:7': 0.98620412, '0:2:7:1': 0.98620412, '0:7:1:2': 0.98620412, '0:7:2:1': 0.98620412, '1:0:2:7': 0.98620412, '1:0:7:2': 0.98620412, '1:2:0:7': 0.98620412, '1:2:7:0': 0.98620412, '1:2:5:2': 0.98174905, '1:2:2:5': 0.98174905, '2:1:2:5': 0.98174905, '2:1:5:2': 0.98174905, '2:2:1:5': 0.98174905, '2:2:5:1': 0.98174905, '2:5:1:2': 0.98174905, '2:5:2:1': 0.98174905, '5:1:2:2': 0.98174905, '5:2:1:2': 0.98174905, '5:2:2:1': 0.98174905, '1:5:2:2': 0.98174905, '4:2:2:2': 0.98081195, '2:4:2:2': 0.98081195, '2:2:2:4': 0.98081195, '2:2:4:2': 0.98081195, '0:2:2:6': 0.97927898, '2:0:2:6': 0.97927898, '0:2:6:2': 0.97927898, '2:0:6:2': 0.97927898, '2:2:0:6': 0.97927898, '2:2:6:0': 0.97927898, '2:6:0:2': 0.97927898, '2:6:2:0': 0.97927898, '0:6:2:2': 0.97927898, '6:0:2:2': 0.97927898, '6:2:0:2': 0.97927898, '6:2:2:0': 0.97927898, '2:2:3:3': 0.97764945, '2:3:2:3': 0.97764945, '2:3:3:2': 0.97764945, '3:2:2:3': 0.97764945, '3:2:3:2': 0.97764945, '3:3:2:2': 0.97764945, '5:3:1:1': 0.97596792, '5:1:3:1': 0.97596792, '1:1:3:5': 0.97596792, '1:3:1:5': 0.97596792, '1:3:5:1': 0.97596792, '1:5:3:1': 0.97596792, '3:1:1:5': 0.97596792, '5:1:1:3': 0.97596792, '1:1:5:3': 0.97596792, '3:5:1:1': 0.97596792, '1:5:1:3': 0.97596792, '3:1:5:1': 0.97596792, '4:1:2:3': 0.97475491, '4:1:3:2': 0.97475491, '4:3:1:2': 0.97475491, '3:4:1:2': 0.97475491, '4:2:1:3': 0.97475491, '4:2:3:1': 0.97475491, '1:2:3:4': 0.97475491, '1:3:2:4': 0.97475491, '1:3:4:2': 0.97475491, '1:4:2:3': 0.97475491, '1:4:3:2': 0.97475491, '2:1:3:4': 0.97475491, '2:3:1:4': 0.97475491, '2:3:4:1': 0.97475491, '2:4:1:3': 0.97475491, '3:1:2:4': 0.97475491, '3:1:4:2': 0.97475491, '3:2:1:4': 0.97475491, '3:2:4:1': 0.97475491, '3:4:2:1': 0.97475491, '4:3:2:1': 0.97475491, '1:2:4:3': 0.97475491, '2:1:4:3': 0.97475491, '2:4:3:1': 0.97475491, '1:3:3:3': 0.97331835, '3:1:3:3': 0.97331835, '3:3:1:3': 0.97331835, '3:3:3:1': 0.97331835, '0:3:1:6': 0.97257357, '0:3:6:1': 0.97257357, '0:1:3:6': 0.97257357, '0:6:1:3': 0.97257357, '1:0:3:6': 0.97257357, '3:0:1:6': 0.97257357, '3:0:6:1': 0.97257357, '3:1:6:0': 0.97257357, '3:6:0:1': 0.97257357, '3:6:1:0': 0.97257357, '0:1:6:3': 0.97257357, '1:0:6:3': 0.97257357, '1:3:0:6': 0.97257357, '1:6:0:3': 0.97257357, '3:1:0:6': 0.97257357, '6:0:1:3': 0.97257357, '6:0:3:1': 0.97257357, '6:1:0:3': 0.97257357, '6:3:0:1': 0.97257357, '0:6:3:1': 0.97257357, '1:3:6:0': 0.97257357, '1:6:3:0': 0.97257357, '6:1:3:0': 0.97257357, '6:3:1:0': 0.97257357, '4:1:1:4': 0.9715781, '1:4:1:4': 0.9715781, '1:4:4:1': 0.9715781, '4:1:4:1': 0.9715781, '4:4:1:1': 0.9715781, '1:1:4:4': 0.9715781, '0:7:3:0': 0.9696671, '3:0:0:7': 0.9696671, '3:0:7:0': 0.9696671, '3:7:0:0': 0.9696671, '7:0:0:3': 0.9696671, '7:0:3:0': 0.9696671, '7:3:0:0': 0.9696671, '0:0:3:7': 0.9696671, '0:0:7:3': 0.9696671, '0:3:0:7': 0.9696671, '0:7:0:3': 0.9696671, '0:3:7:0': 0.9696671, '2:0:3:5': 0.96946634, '3:2:0:5': 0.96946634, '0:2:3:5': 0.96946634, '0:3:2:5': 0.96946634, '3:0:2:5': 0.96946634, '0:2:5:3': 0.96946634, '0:3:5:2': 0.96946634, '0:5:2:3': 0.96946634, '0:5:3:2': 0.96946634, '2:0:5:3': 0.96946634, '2:3:0:5': 0.96946634, '2:3:5:0': 0.96946634, '2:5:0:3': 0.96946634, '2:5:3:0': 0.96946634, '3:0:5:2': 0.96946634, '3:2:5:0': 0.96946634, '3:5:0:2': 0.96946634, '3:5:2:0': 0.96946634, '5:0:2:3': 0.96946634, '5:0:3:2': 0.96946634, '5:2:0:3': 0.96946634, '5:2:3:0': 0.96946634, '5:3:0:2': 0.96946634, '5:3:2:0': 0.96946634, '2:4:4:0': 0.9654088, '0:2:4:4': 0.9654088, '0:4:2:4': 0.9654088, '0:4:4:2': 0.9654088, '2:0:4:4': 0.9654088, '2:4:0:4': 0.9654088, '4:0:2:4': 0.9654088, '4:0:4:2': 0.9654088, '4:2:0:4': 0.9654088, '4:2:4:0': 0.9654088, '4:4:0:2': 0.9654088, '4:4:2:0': 0.9654088, '0:1:4:5': 0.96282785, '0:1:5:4': 0.96282785, '1:4:0:5': 0.96282785, '1:4:5:0': 0.96282785, '4:0:1:5': 0.96282785, '0:5:1:4': 0.96282785, '0:5:4:1': 0.96282785, '1:0:4:5': 0.96282785, '4:1:0:5': 0.96282785, '5:0:4:1': 0.96282785, '5:4:0:1': 0.96282785, '0:4:1:5': 0.96282785, '1:0:5:4': 0.96282785, '1:5:0:4': 0.96282785, '1:5:4:0': 0.96282785, '4:0:5:1': 0.96282785, '4:1:5:0': 0.96282785, '4:5:0:1': 0.96282785, '4:5:1:0': 0.96282785, '5:0:1:4': 0.96282785, '5:1:4:0': 0.96282785, '5:4:1:0': 0.96282785, '0:4:5:1': 0.96282785, '5:1:0:4': 0.96282785, '0:4:3:3': 0.96272354, '0:3:3:4': 0.96272354, '0:3:4:3': 0.96272354, '3:0:3:4': 0.96272354, '3:0:4:3': 0.96272354, '3:3:0:4': 0.96272354, '3:3:4:0': 0.96272354, '3:4:0:3': 0.96272354, '4:0:3:3': 0.96272354, '4:3:0:3': 0.96272354, '4:3:3:0': 0.96272354, '3:4:3:0': 0.96272354, '0:0:6:4': 0.95921278, '0:0:4:6': 0.95921278, '0:4:0:6': 0.95921278, '0:4:6:0': 0.95921278, '0:6:0:4': 0.95921278, '0:6:4:0': 0.95921278, '4:0:0:6': 0.95921278, '4:0:6:0': 0.95921278, '6:0:0:4': 0.95921278, '6:0:4:0': 0.95921278, '6:4:0:0': 0.95921278, '4:6:0:0': 0.95921278, '5:0:5:0': 0.95252961, '5:5:0:0': 0.95252961, '0:5:5:0': 0.95252961, '0:5:0:5': 0.95252961, '5:0:0:5': 0.95252961, '0:0:5:5': 0.95252961}
@@ -132,7 +125,6 @@ class Simulate_wet_pipeline():
         
         return Cpdna_k_set, Symbol2bit[self.alp_size], GFint, CpDNA2bit[self.alp_size]
 
-
     def Simulate_matrix(self, matrix_infr: list) -> list:
         '''#TODO: Simulate in one matrix containing multi-matrix_crc32''' 
         matirx_infr = []
@@ -141,16 +133,12 @@ class Simulate_wet_pipeline():
             matirx_infr.append(rel)
         return matirx_infr
 
-
     def Simulate_read(self, read_infr: list) -> list:
         """
         #TODO: Simulate the one read contain 150 letters
         :param read_infr = [read_id: int, read_depth: int, read_cpdna: list]
         :return: parameters: list = [read_id: int, read_depth: int, real_depth: int, normcpdna: list].
-        :return: normcpdna: [ Max_fre_sample: str, cpdna: str, distance: float ]
-        """
-                
-        '''##'''
+        :return: normcpdna: [ Max_fre_sample: str, cpdna: str, distance: float ]"""
         sequence_read = []
         for syn_cpdna in read_infr[-1]: 
             sequence_read.append(Simulate_wet_pipeline.Simulate_CpDNA(self, syn_cpdna, read_infr[1]))
@@ -168,7 +156,6 @@ class Simulate_wet_pipeline():
             norm2CpDNA.append(Clo_NormCpDNA)
         return [read_infr[0], read_infr[1], real_dp, norm2CpDNA]
 
-
     def Simulate_CpDNA(self, cpdna_refer: str, dp_refer: int) -> list:
         """
         #TODO: Simulate the one composite letter
@@ -176,7 +163,6 @@ class Simulate_wet_pipeline():
         :param dp_refer: int, sequencing depth
         :return: simulate oligo in wet pipeline.
         """
-        
         cpdna_val = list(map(int, re.findall(r'\d+', cpdna_refer)))
         ratio =  { i : r/self.k for i,r in zip(self.Oligo_Order, cpdna_val) }
 
@@ -201,7 +187,7 @@ class Simulate_wet_pipeline():
         
         seedoligo_val = random.sample(range(self.fmol), dp_refer)
         
-        '''ToDO: Introduce the nucleotide error, e.g mismatch, insert and delete'''            
+        '''TODO: Introduce the nucleotide error, e.g mismatch, insert and delete'''            
         del_err, insert_err = 7.96*pow(10, 4), 3.43*pow(10, 4) #self-setup; Calculated from real data
         total_err = del_err + insert_err + self.err_rate
         
@@ -224,7 +210,6 @@ class Simulate_wet_pipeline():
             pdl_oligo.append(simul_oligo)
         random.shuffle(pdl_oligo)
         return pdl_oligo
-
 
     def Sample2Infer_MAP(self, sample_observed: list) -> list:
         """
@@ -253,9 +238,7 @@ class Simulate_wet_pipeline():
         distance = [ pow(candi_fre_val[1][ll]-sample_norm[ll], 2) for ll in range(4)]]'''
     
         Max_fre_sample = [ ':'.join(list(map(str, candi_fre_val[0]))), ':'.join(list(map(str, candi_fre_val[1]))) ]
-        
         return Max_fre_sample
-
 
     def Brute_Norm(self, ton_dp):
         '''#TODO: Infer the most probable original letter that generates the observed frequencies via MAP #'''
@@ -272,12 +255,10 @@ class Simulate_wet_pipeline():
         for d_val in range(diff_K_val):
             oligosorted[d_val][1][0] += 1
         
-        '''#rel : [[0, 4], [3, 3], [2, 2], [1, 1]] , 加和为K, rel = [[oligo_index, quot], [oligo_index, quot], ..., ...]'''
         rel = [[oligosorted[l][0],oligosorted[l][1][0]] for l in range(4)] 
         rel.sort(key=lambda l:l[0])
         multirel = [ rel[l][1] for l in range(4)]
         return multirel
-
 
     def Simulate_Fre(self, sim_cpdna: list, sim_dp: list) -> float:
         """
@@ -295,7 +276,6 @@ class Simulate_wet_pipeline():
         sub_norm_log_val.sort()
         norm_rat_sum = sum(sub_norm_log_val)
         return norm_rat_sum
-    
 
     def Shape_Fmol_Err(self):
         cpdna_list = []
@@ -316,7 +296,6 @@ class Simulate_wet_pipeline():
             ratioFmol_Set[a_str] = ratioFmol
         return ratioFmol_Set
 
-
     @staticmethod
     def Combinatorial(sample, fmol_part):
         '''#TODO: combination number from fmol_part to sample'''
@@ -330,10 +309,8 @@ class Simulate_wet_pipeline():
             sum1 += math.log10(f)
             
         for f in range(1,fmol_part-sample+1):
-            sum2 += math.log10(f)
-            
+            sum2 += math.log10(f)   
         return sum1 - sum2
-
 
 
 def read_args():
@@ -361,9 +338,7 @@ def read_args():
                         help="The total error rate of oligo in process of DNA stroage.")
     parser.add_argument("-s", "--sample_val", required=False, type=float,
                         help="The value of sampling quality.")
-
     return parser.parse_args()
-
 
 if __name__ == '__main__':
     '''#TODO: global variance#'''
