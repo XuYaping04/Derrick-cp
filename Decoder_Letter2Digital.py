@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sun Jun 25 16:36:29 2023
 
-@author: Xu Yaping
-"""
 import re, os, time, itertools
 from numpy import packbits, unpackbits
 import numpy as np
