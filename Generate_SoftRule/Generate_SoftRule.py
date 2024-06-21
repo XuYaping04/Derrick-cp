@@ -50,11 +50,12 @@ def permute_unique(nums):
     return unique_permutations
 
 def partition_permute(n):
-    result = []
-    result_list = partition_into_four_integer(n)
-    for l in result_list:
-        result.extend(permute_unique(sorted(l)))
-    return result
+    rel_list = []
+    result_uniq = partition_into_four_integer(n)
+    for l in result_uniq:
+        rel_list.extend(permute_unique(sorted(l)))
+    #rel_dict = { ':'.join(list(map(str, l))): [] for l in rel_list}
+    return rel_list
 
 def Factorial(sub_sample,sub_fmol):
     '''#TODO: C(sub_sample,sub_fmol) '''
@@ -358,8 +359,10 @@ if __name__ == "__main__":
     root = params.output_root
     ratio_min = params.ratio_floor
 
-    k_list,k_dict = Sumk()
-    dp_set,dp_dict = Sumdeep()
+    k_list = partition_permute(k)
+    k_dict = { ':'.join(list(map(str, l))): [] for l in k_list }
+    dp_set = partition_permute(deep)
+    dp_dict = { ':'.join(list(map(str, l))): [[], -1] for l in dp_set }
 
     soft_rule, letter_order = Generate_Softrule()
     
